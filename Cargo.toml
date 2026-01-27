@@ -1,0 +1,18 @@
+[package]
+name = "deppops"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "deppops"
+path = "src/main.rs"
+
+[lib]
+name = "deppops"
+path = "src/lib.rs"
+
+[dependencies]
+actix-web = "4.4"
+
+[dev-dependencies]
+actix-web = { version = "4.4", features = ["macros"] }
