@@ -69,6 +69,32 @@
             inherit (commonArgs) src;
             inherit advisory-db;
           };
+
+          # SAST scanning with semgrep
+          deppops-semgrep = pkgs.runCommand "deppops-semgrep" {
+            nativeBuildInputs = [ pkgs.semgrep pkgs.cacert ];
+            src = commonArgs.src;
+            SEMGREP_DISABLE_TELEMETRY = "1";
+            # We set $HOME here because semgrep will try to create a directory
+            # there. It cant do that in the $out dir (which is what this script
+            # operates in) because it is sandboxed
+            HOME = "/tmp/semgrep-home";
+          } ''
+            cd $src
+            # Run semgrep with auto config (includes Rust security rules)
+            # --error: Exit with error code if findings
+            # --quiet: Reduce noise
+            # --exclude: Skip test files and generated code
+            semgrep scan \
+              --config=auto \
+              --error \
+              --quiet \
+              --exclude='tests/' \
+              --exclude='target/' \
+              .
+              touch $out
+          '';
+
         };
 
         devShells.default = craneLib.devShell {
@@ -84,6 +110,7 @@
             nushell
             cosign
             skopeo
+            semgrep
           ];
           RUST_LOG = "deppops=debug";
         };
