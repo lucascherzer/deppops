@@ -29,7 +29,7 @@ jobs:
         id: image_name
         run: |
           IMAGE_NAME=ghcr.io/$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')/deppops
-          TAG=$(nix eval --raw .#container.tag)
+          TAG=$(nix eval --raw ".#packages.x86_64-linux.container.imageTag")
           echo "IMAGE_WITH_TAG=${IMAGE_NAME}:${TAG}" >> $GITHUB_OUTPUT
 
       - name: Push with skopeo
