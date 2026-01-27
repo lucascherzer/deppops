@@ -14,13 +14,10 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Nix
-        uses: cachix/install-nix-action@v22
+      - uses: actions/checkout@v5
+      - uses: cachix/install-nix-action@v31
         with:
-          nix_path: nixpkgs=channel:nixpkgs-unstable
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build container
         run: nix build .#container
