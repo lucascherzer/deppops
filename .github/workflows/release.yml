@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write # for cosign
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v22
+        with:
+          nix_path: nixpkgs=channel:nixpkgs-unstable
+
+      - name: Build container
+        run: nix build .#container
+
+      - name: Login to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | nix develop --command skopeo login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Determine Image Name
+        id: image_name
+        run: |
+          IMAGE_NAME=ghcr.io/$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')/deppops
+          TAG=$(nix eval --raw .#container.tag)
+          echo "IMAGE_WITH_TAG=${IMAGE_NAME}:${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Push with skopeo
+        run: |
+          nix develop --command skopeo copy oci-archive:result docker://${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
+
+      - name: Vulnerability Scan and Attach Reports
+        run: nix develop --command nu ci/vulnscan.nu ${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
+
+      - name: Sign container
+        run: nix develop --command nu ci/sign.nu ${{ steps.image_name.outputs.IMAGE_WITH_TAG }}

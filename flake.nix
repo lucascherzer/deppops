@@ -41,7 +41,7 @@
           inherit deppops;
           container = pkgs.dockerTools.buildImage {
             name = "deppops";
-            tag = "latest";
+            tag = self.shortRev or "dirty";
             copyToRoot = deppops;
             config = {
               Cmd = [ "/bin/deppops" ];
@@ -73,10 +73,17 @@
 
         devShells.default = craneLib.devShell {
           checks = self.checks.${system};
-          packages = [
-            pkgs.rust-analyzer
-            pkgs.cargo-watch
-            pkgs.cargo-edit
+          packages = with pkgs; [
+            # this includes all dependencies we need in CI, so our local env
+            # and CI always matches - no env mismatch caused errors
+            rust-analyzer
+            cargo-watch
+            cargo-edit
+            syft
+            grype
+            nushell
+            cosign
+            skopeo
           ];
           RUST_LOG = "deppops=debug";
         };
