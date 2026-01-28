@@ -69,6 +69,17 @@
             inherit (commonArgs) src;
             inherit advisory-db;
           };
+          # Kubernetes manifest linting
+          deppops-kubeconform = pkgs.runCommand "deppops-kubeconform" {
+            nativeBuildInputs = [ pkgs.kubeconform ];
+            src = self;
+          } ''
+            set -e
+            cd $src
+            kubeconform k8s/
+            touch $out
+          '';
+
 
           # SAST scanning with semgrep
           deppops-semgrep = pkgs.runCommand "deppops-semgrep" {
@@ -111,6 +122,7 @@
             cosign
             skopeo
             semgrep
+            kubeconform
           ];
           RUST_LOG = "deppops=debug";
         };
