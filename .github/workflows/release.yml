@@ -32,12 +32,12 @@ jobs:
           TAG=$(nix eval --raw ".#packages.x86_64-linux.container.imageTag")
           echo "IMAGE_WITH_TAG=${IMAGE_NAME}:${TAG}" >> $GITHUB_OUTPUT
 
-      - name: Push with skopeo
-        run: |
-          nix develop --command skopeo copy oci-archive:result docker://${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
-
       - name: Vulnerability Scan and Attach Reports
         run: nix develop --command nu ci/vulnscan.nu ${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
 
       - name: Sign container
         run: nix develop --command nu ci/sign.nu ${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
+
+      - name: Push with skopeo
+        run: |
+          nix develop --command skopeo copy oci-archive:result docker://${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
