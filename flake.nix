@@ -15,6 +15,33 @@
         pkgs = nixpkgs.legacyPackages.${system};
         craneLib = crane.mkLib pkgs;
 
+        # Kubernetes version for schema validation
+        k8sVersion = "v1.31.0";
+
+        # Download only the specific schema files we need from raw.githubusercontent.com
+        # This avoids downloading the entire 2GB+ repo
+        k8sSchemaBase = "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/${k8sVersion}-standalone";
+
+        # To get the correct hash:
+        # 1. Set sha256 = pkgs.lib.fakeHash (or leave as-is on first run)
+        # 2. Run: nix build .#checks.x86_64-linux.deppops-kubeconform
+        # 3. Nix will fail and show the actual hash
+        # 4. Replace pkgs.lib.fakeHash with the actual hash shown in the error
+        #
+        # To add more schemas (e.g., for Deployment, Service, etc.):
+        # 1. Add a new fetchurl for each resource type
+        # 2. Add a cp line in k8sSchemas runCommand below
+        namespaceSchema = pkgs.fetchurl {
+          url = "${k8sSchemaBase}/namespace-v1.json";
+          sha256 = "sha256-1AA3lrGujDvcnDye2TiW1z0f0tzX6p55kG6Us8ouPHQ=";
+        };
+
+        # Create a directory with all schemas we need
+        k8sSchemas = pkgs.runCommand "k8s-schemas" {} ''
+          mkdir -p $out
+          cp ${namespaceSchema} $out/namespace-v1.json
+        '';
+
         commonArgs = {
           src = craneLib.cleanCargoSource ./.;
           strictDeps = true;
@@ -76,7 +103,11 @@
           } ''
             set -e
             cd $src
-            kubeconform k8s/
+            # Use local kubernetes schemas to avoid network access in Nix sandbox
+            kubeconform \
+              -schema-location '${k8sSchemas}/{{ .ResourceKind }}{{ .KindSuffix }}.json' \
+              -summary \
+              k8s/
             touch $out
           '';
 
