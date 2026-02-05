@@ -18,13 +18,6 @@ jobs:
       - uses: cachix/install-nix-action@v31
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: cachix/install-nix-action@v25
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
-      - uses: cachix/cachix-action@v14
-        with:
-          name: dhbw-ma-tinf23ai1-devops
-          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
       - name: Build container
         run: nix build .#container
 
@@ -40,43 +33,16 @@ jobs:
 
       - name: Generate Vulnerability Reports
         run: |
-          set -x  # Enable verbose output
-          REPORTS_DIR=$(mktemp -d)
-          echo "Reports directory: $REPORTS_DIR"
-
-          # Resolve the result symlink to absolute path
-          CONTAINER_PATH=$(readlink -f result)
-          echo "Container path: $CONTAINER_PATH"
-          file $CONTAINER_PATH
-
-          # Decompress the .tar.gz to plain .tar for syft/grype
-          CONTAINER_TAR=$REPORTS_DIR/container.tar
-          echo "Decompressing to: $CONTAINER_TAR"
-          gunzip -c $CONTAINER_PATH > $CONTAINER_TAR
-          echo "Decompressed successfully"
-          file $CONTAINER_TAR
-
-          echo "Generating SBOM with syft..."
-          nix develop --command bash -c "syft docker-archive:$CONTAINER_TAR -o spdx-json=$REPORTS_DIR/sbom.spdx.json"
-          echo "SBOM generated successfully"
-
-          echo "Scanning for vulnerabilities with grype..."
-          nix develop --command bash -c "grype docker-archive:$CONTAINER_TAR -o cyclonedx-json=$REPORTS_DIR/cve.cyclonedx.json"
-          echo "Vulnerability scan completed"
-
-          echo "Verifying reports exist..."
-          ls -lah $REPORTS_DIR/
-
+          REPORTS_DIR=$(nix develop --command nu ci/vulnscan.nu)
           echo "REPORTS_DIR=$REPORTS_DIR" >> $GITHUB_ENV
 
       - name: Push with skopeo
         run: |
-          nix develop --command skopeo copy oci-archive:result docker://${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
+          nix develop --command skopeo copy docker-archive:result docker://${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
 
       - name: Attach Vulnerability Reports
         run: |
-          nix develop --command cosign attach sbom --sbom ${{ env.REPORTS_DIR }}/sbom.spdx.json ${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
-          nix develop --command cosign attach sbom --sbom ${{ env.REPORTS_DIR }}/cve.cyclonedx.json ${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
+          nix develop --command nu ci/attach-sbom.nu ${{ env.REPORTS_DIR }} ${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
 
       - name: Sign container
         run: nix develop --command nu ci/sign.nu ${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
