@@ -32,12 +32,21 @@ jobs:
           TAG=$(nix eval --raw ".#packages.x86_64-linux.container.imageTag")
           echo "IMAGE_WITH_TAG=${IMAGE_NAME}:${TAG}" >> $GITHUB_OUTPUT
 
-      - name: Vulnerability Scan and Attach Reports
-        run: nix develop --command nu ci/vulnscan.nu ${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
-
-      - name: Sign container
-        run: nix develop --command nu ci/sign.nu ${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
+      - name: Generate Vulnerability Reports
+        run: |
+          REPORTS_DIR=$(mktemp -d)
+          nix develop --command syft -o spdx-json oci-archive:result > $REPORTS_DIR/sbom.spdx.json
+          nix develop --command grype -o spdx-json oci-archive:result > $REPORTS_DIR/cve.spdx.json
+          echo "REPORTS_DIR=$REPORTS_DIR" >> $GITHUB_ENV
 
       - name: Push with skopeo
         run: |
           nix develop --command skopeo copy oci-archive:result docker://${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
+
+      - name: Attach Vulnerability Reports
+        run: |
+          nix develop --command cosign attach sbom --sbom ${{ env.REPORTS_DIR }}/sbom.spdx.json ${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
+          nix develop --command cosign attach sbom --sbom ${{ env.REPORTS_DIR }}/cve.spdx.json ${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
+
+      - name: Sign container
+        run: nix develop --command nu ci/sign.nu ${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
