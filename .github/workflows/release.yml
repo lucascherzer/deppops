@@ -23,7 +23,7 @@ jobs:
           nix_path: nixpkgs=channel:nixos-unstable
       - uses: cachix/cachix-action@v14
         with:
-          name: mycache
+          name: dhbw-ma-tinf23ai1-devops
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
       - name: Build container
         run: nix build .#container
@@ -57,11 +57,11 @@ jobs:
           file $CONTAINER_TAR
 
           echo "Generating SBOM with syft..."
-          nix develop --command "syft oci-archive:$CONTAINER_TAR -o spdx-json=$REPORTS_DIR/sbom.spdx.json"
+          nix develop --command bash -c "syft oci-archive:$CONTAINER_TAR -o spdx-json=$REPORTS_DIR/sbom.spdx.json"
           echo "SBOM generated successfully"
 
           echo "Scanning for vulnerabilities with grype..."
-          nix develop --command "grype oci-archive:$CONTAINER_TAR -o spdx-json=$REPORTS_DIR/cve.spdx.json"
+          nix develop --command bash -c "grype oci-archive:$CONTAINER_TAR -o spdx-json=$REPORTS_DIR/cve.spdx.json"
           echo "Vulnerability scan completed"
 
           echo "Verifying reports exist..."
