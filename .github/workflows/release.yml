@@ -57,11 +57,11 @@ jobs:
           file $CONTAINER_TAR
 
           echo "Generating SBOM with syft..."
-          nix develop --command syft oci-archive:$CONTAINER_PATH -o spdx-json=$REPORTS_DIR/sbom.spdx.json
+          nix develop --command "syft oci-archive:$CONTAINER_TAR -o spdx-json=$REPORTS_DIR/sbom.spdx.json"
           echo "SBOM generated successfully"
 
           echo "Scanning for vulnerabilities with grype..."
-          nix develop --command grype oci-archive:$CONTAINER_PATH -o spdx-json=$REPORTS_DIR/cve.spdx.json
+          nix develop --command "grype oci-archive:$CONTAINER_TAR -o spdx-json=$REPORTS_DIR/cve.spdx.json"
           echo "Vulnerability scan completed"
 
           echo "Verifying reports exist..."
