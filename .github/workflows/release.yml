@@ -34,9 +34,21 @@ jobs:
 
       - name: Generate Vulnerability Reports
         run: |
+          set -x  # Enable verbose output
           REPORTS_DIR=$(mktemp -d)
-          nix develop --command syft -o spdx-json oci-archive:result > $REPORTS_DIR/sbom.spdx.json
-          nix develop --command grype -o spdx-json oci-archive:result > $REPORTS_DIR/cve.spdx.json
+          echo "Reports directory: $REPORTS_DIR"
+
+          echo "Generating SBOM with syft..."
+          nix develop --command syft oci-archive:result -o spdx-json=$REPORTS_DIR/sbom.spdx.json
+          echo "SBOM generated successfully"
+
+          echo "Scanning for vulnerabilities with grype..."
+          nix develop --command grype oci-archive:result -o spdx-json=$REPORTS_DIR/cve.spdx.json
+          echo "Vulnerability scan completed"
+
+          echo "Verifying reports exist..."
+          ls -lah $REPORTS_DIR/
+
           echo "REPORTS_DIR=$REPORTS_DIR" >> $GITHUB_ENV
 
       - name: Push with skopeo
