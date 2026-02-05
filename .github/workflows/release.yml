@@ -47,6 +47,14 @@ jobs:
           # Resolve the result symlink to absolute path
           CONTAINER_PATH=$(readlink -f result)
           echo "Container path: $CONTAINER_PATH"
+          file $CONTAINER_PATH
+
+          # Decompress the .tar.gz to plain .tar for syft/grype
+          CONTAINER_TAR=$REPORTS_DIR/container.tar
+          echo "Decompressing to: $CONTAINER_TAR"
+          gunzip -c $CONTAINER_PATH > $CONTAINER_TAR
+          echo "Decompressed successfully"
+          file $CONTAINER_TAR
 
           echo "Generating SBOM with syft..."
           nix develop --command syft oci-archive:$CONTAINER_PATH -o spdx-json=$REPORTS_DIR/sbom.spdx.json
