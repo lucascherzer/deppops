@@ -21,8 +21,11 @@ jobs:
       - name: Build container
         run: nix build .#container
 
-      - name: Login to GitHub Container Registry
+      - name: Login to GitHub Container Registry (skopeo)
         run: echo "${{ secrets.GITHUB_TOKEN }}" | nix develop --command skopeo login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Login to GitHub Container Registry (cosign)
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | nix develop --command cosign login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Determine Image Name
         id: image_name
@@ -45,4 +48,7 @@ jobs:
           nix develop --command nu ci/attach-sbom.nu ${{ env.REPORTS_DIR }} ${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
 
       - name: Sign container
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         run: nix develop --command nu ci/sign.nu ${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
