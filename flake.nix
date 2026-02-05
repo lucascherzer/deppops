@@ -8,8 +8,12 @@
       url = "github:rustsec/advisory-db";
       flake = false;
     };
+    semgrep-rules = {
+      url = "github:semgrep/semgrep-rules";
+      flake = false;
+    };
   };
-  outputs = { self, nixpkgs, crane, flake-utils, advisory-db, ... }:
+  outputs = { self, nixpkgs, crane, flake-utils, advisory-db, semgrep-rules, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
@@ -114,27 +118,30 @@
 
           # SAST scanning with semgrep
           deppops-semgrep = pkgs.runCommand "deppops-semgrep" {
-            nativeBuildInputs = [ pkgs.semgrep pkgs.cacert ];
+            nativeBuildInputs = [ pkgs.semgrep pkgs.findutils pkgs.cacert ];
             src = commonArgs.src;
             SEMGREP_DISABLE_TELEMETRY = "1";
-            # We set $HOME here because semgrep will try to create a directory
-            # there. It cant do that in the $out dir (which is what this script
-            # operates in) because it is sandboxed
-            HOME = "/tmp/semgrep-home";
+            HOME = "$TMPDIR";
           } ''
+            export HOME=$TMPDIR
             cd $src
-            # Run semgrep with auto config (includes Rust security rules)
+
+            # Find all Rust rule files in the semgrep-rules repo
+            # This automatically includes all Rust security, best-practice, and correctness rules
+            RUST_RULES=$(find ${semgrep-rules}/rust -name '*.yaml' -o -name '*.yml' | tr '\n' ' ')
+
+            # Run semgrep with local rules to avoid network access in Nix sandbox
             # --error: Exit with error code if findings
             # --quiet: Reduce noise
             # --exclude: Skip test files and generated code
             semgrep scan \
-              --config=auto \
+              --config $RUST_RULES \
               --error \
               --quiet \
               --exclude='tests/' \
               --exclude='target/' \
               .
-              touch $out
+            touch $out
           '';
 
         };

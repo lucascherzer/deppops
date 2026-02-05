@@ -70,7 +70,24 @@
         "advisory-db": "advisory-db",
         "crane": "crane",
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "semgrep-rules": "semgrep-rules"
+      }
+    },
+    "semgrep-rules": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1768476565,
+        "narHash": "sha256-YmAZbmN+3TOQga9AXU2cVeNrLHuNd/ehd6+/ZpBn9u8=",
+        "owner": "semgrep",
+        "repo": "semgrep-rules",
+        "rev": "46a0ecfdf78f86a6409677c58417f845ef9eae9a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "semgrep",
+        "repo": "semgrep-rules",
+        "type": "github"
       }
     },
     "systems": {
