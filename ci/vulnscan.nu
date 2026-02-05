@@ -6,24 +6,17 @@ def main [] {
 
     # Resolve the result symlink to absolute path
     let container_path = (readlink -f result)
-    print $"Container path: ($container_path)"
 
     # Decompress the .tar.gz to plain .tar for syft/grype
     let container_tar = $"($reports_dir)/container.tar"
-    print $"Decompressing to: ($container_tar)"
     gunzip -c $container_path | save -f $container_tar
-    print "Decompressed successfully"
 
     # Generate SBOM with syft
-    print "Generating SBOM with syft..."
     syft -o spdx-json $"docker-archive:($container_tar)" | save -f $"($reports_dir)/sbom.spdx.json"
-    print "SBOM generated successfully"
 
     # Scan for vulnerabilities with grype
-    print "Scanning for vulnerabilities with grype..."
     grype -o cyclonedx-json $"docker-archive:($container_tar)" | save -f $"($reports_dir)/cve.cyclonedx.json"
-    print "Vulnerability scan completed"
 
-    # Return the reports directory path
+    # Return the reports directory path (only output to stdout)
     print $reports_dir
 }
