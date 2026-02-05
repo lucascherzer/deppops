@@ -43,12 +43,20 @@ jobs:
         run: |
           nix develop --command skopeo copy docker-archive:result docker://${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
 
+      - name: Get Image Digest
+        id: digest
+        run: |
+          DIGEST=$(nix develop --command skopeo inspect docker://${{ steps.image_name.outputs.IMAGE_WITH_TAG }} | jq -r '.Digest')
+          echo "IMAGE_DIGEST=${DIGEST}" >> $GITHUB_OUTPUT
+          IMAGE_NAME_PARTS=$(echo "${{ steps.image_name.outputs.IMAGE_WITH_TAG }}" | cut -d: -f1)
+          echo "IMAGE_WITH_DIGEST=${IMAGE_NAME_PARTS}@${DIGEST}" >> $GITHUB_OUTPUT
+
       - name: Attach Vulnerability Reports
         run: |
-          nix develop --command nu ci/attach-sbom.nu ${{ env.REPORTS_DIR }} ${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
+          nix develop --command nu ci/attach-sbom.nu ${{ env.REPORTS_DIR }} ${{ steps.digest.outputs.IMAGE_WITH_DIGEST }}
 
       - name: Sign container
         env:
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-        run: nix develop --command nu ci/sign.nu ${{ steps.image_name.outputs.IMAGE_WITH_TAG }}
+        run: nix develop --command nu ci/sign.nu ${{ steps.digest.outputs.IMAGE_WITH_DIGEST }}
