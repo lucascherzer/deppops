@@ -38,12 +38,16 @@ jobs:
           REPORTS_DIR=$(mktemp -d)
           echo "Reports directory: $REPORTS_DIR"
 
+          # Resolve the result symlink to absolute path
+          CONTAINER_PATH=$(readlink -f result)
+          echo "Container path: $CONTAINER_PATH"
+
           echo "Generating SBOM with syft..."
-          nix develop --command syft oci-archive:result -o spdx-json=$REPORTS_DIR/sbom.spdx.json
+          nix develop --command syft oci-archive:$CONTAINER_PATH -o spdx-json=$REPORTS_DIR/sbom.spdx.json
           echo "SBOM generated successfully"
 
           echo "Scanning for vulnerabilities with grype..."
-          nix develop --command grype oci-archive:result -o spdx-json=$REPORTS_DIR/cve.spdx.json
+          nix develop --command grype oci-archive:$CONTAINER_PATH -o spdx-json=$REPORTS_DIR/cve.spdx.json
           echo "Vulnerability scan completed"
 
           echo "Verifying reports exist..."
