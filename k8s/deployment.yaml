@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: deppops
-          image: ghcr.io/lucascherzer/deppops/deppops@sha256:12bb6f21b68df3574aeeca192eab43e9f18eb303641d383caa7c787323fb9ebb
+          image: ghcr.io/lucascherzer/deppops/deppops@sha256:1f0799e6f9705324be6c2fc94ced25c983a162289849cee1702fc01b5530bb8b
           imagePullPolicy: IfNotPresent
           env:
             - name: RUST_LOG
