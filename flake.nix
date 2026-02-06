@@ -40,10 +40,28 @@
           sha256 = "sha256-1AA3lrGujDvcnDye2TiW1z0f0tzX6p55kG6Us8ouPHQ=";
         };
 
+        deploymentSchema = pkgs.fetchurl {
+          url = "${k8sSchemaBase}/deployment-apps-v1.json";
+          sha256 = "sha256-X2xYxxgeGQjk0NyehU2NGuh8nke21AUMd5W6PwxYejg=";
+        };
+
+        serviceSchema = pkgs.fetchurl {
+          url = "${k8sSchemaBase}/service-v1.json";
+          sha256 = "sha256-xtVmeO2m7BJOReH3NkZyleahRx7dvXX7T2NbZzMYtkA=";
+        };
+
+        ingressSchema = pkgs.fetchurl {
+          url = "${k8sSchemaBase}/ingress-networking-v1.json";
+          sha256 = "sha256-J3B7F/2bvLZr4fedYf0fimqCm/1iicy7x99UO+HTrxY=";
+        };
+
         # Create a directory with all schemas we need
         k8sSchemas = pkgs.runCommand "k8s-schemas" {} ''
           mkdir -p $out
           cp ${namespaceSchema} $out/namespace-v1.json
+          cp ${deploymentSchema} $out/deployment-apps-v1.json
+          cp ${serviceSchema} $out/service-v1.json
+          cp ${ingressSchema} $out/ingress-networking-v1.json
         '';
 
         commonArgs = {
