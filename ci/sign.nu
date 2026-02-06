@@ -6,13 +6,13 @@ def main [image_name: string] {
         let key_file = (mktemp)
         $env.COSIGN_PRIVATE_KEY | save -f $key_file
 
-        # Sign with the private key
-        cosign sign --key $key_file --yes $image_name
+        # Sign with the private key (this uploads the signature to the registry)
+        cosign sign --key $key_file --yes --upload=true $image_name
 
         # Clean up
         rm $key_file
     } else {
-        # Use keyless signing (OIDC)
-        cosign sign --yes $image_name
+        # Use keyless signing (OIDC, this uploads the signature to the registry)
+        cosign sign --yes --upload=true $image_name
     }
 }

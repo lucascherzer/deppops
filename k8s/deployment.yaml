@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
         - name: deppops
-          image: ghcr.io/lucascherzer/deppops/deppops@sha256:51aa5e7bce74b4b5f57fa38d4e599e23da38a0d7516d698bb7f92365945eec03
-          imagePullPolicy: Always
+          image: ghcr.io/lucascherzer/deppops/deppops@sha256:12bb6f21b68df3574aeeca192eab43e9f18eb303641d383caa7c787323fb9ebb
+          imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 8080
