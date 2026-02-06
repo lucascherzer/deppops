@@ -14,7 +14,7 @@ async fn main() -> std::io::Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    info!("Starting server at http://127.0.0.1:8080");
+    info!("Starting server at http://0.0.0.0:8080");
 
     HttpServer::new(|| {
         App::new()
@@ -22,7 +22,7 @@ async fn main() -> std::io::Result<()> {
             .service(liveness)
             .service(readiness)
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("0.0.0.0", 8080))?
     .run()
     .await
 }
