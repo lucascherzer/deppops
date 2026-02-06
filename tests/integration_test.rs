@@ -13,5 +13,5 @@ async fn test_hello_integration() {
     assert!(resp.status().is_success());
 
     let body = test::read_body(resp).await;
-    assert_eq!(body, "Hello World!");
+    assert_eq!(body, "Hello!");
 }

@@ -2,7 +2,7 @@ use actix_web::{get, HttpResponse, Responder};
 
 #[get("/")]
 pub async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello World!")
+    HttpResponse::Ok().body("Hello!")
 }
 
 #[cfg(test)]
@@ -17,6 +17,6 @@ mod tests {
         let resp = test::call_service(&app, req).await;
         assert!(resp.status().is_success());
         let body = test::read_body(resp).await;
-        assert_eq!(body, web::Bytes::from_static(b"Hello World!"));
+        assert_eq!(body, web::Bytes::from_static(b"Hello!"));
     }
 }
