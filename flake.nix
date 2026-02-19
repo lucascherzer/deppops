@@ -104,6 +104,7 @@
 
         checks = {
           inherit deppops;
+          deppops-vm-test = import ./tests/vm { inherit pkgs; deppopsPackage = deppops; };
           deppops-test = craneLib.cargoTest (commonArgs // {
             inherit cargoArtifacts;
           });
