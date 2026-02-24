@@ -116,6 +116,20 @@ Runs on push to `main`:
 
 The repository is connected to ArgoCD with auto-sync enabled. When changes are pushed to the `k8s/` directory, ArgoCD automatically deploys them to the cluster.
 
+## Post Build
+After each build, a new container is published on ghcr.io.
+
+You can view its SBOM like using a provided script:
+```sh
+nu scripts/get-sbom 'gchr.io/<oci-path>.sbom'
+# see `nu scripts/get-sbom.nu --help` for more options
+```
+Alternatively, you can also do it manually:
+```sh
+skopeo copy docker://ghcr.io/lucascherzer/deppops/deppops:sha256-1f0799e6f9705324be6c2fc94ced25c983a162289849cee1702fc01b5530bb8b.sbom dir:./sbom:latest
+```
+This creates a directory named `sbom:latest`. It contains two files with a long hash for a name. One of them is the SBOM.
+
 ## Observability
 
 The application uses structured logging with `tracing`:
