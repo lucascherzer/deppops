@@ -5,7 +5,7 @@ def main [
 ]: nothing -> nothing {
     let tmp_dir = mktemp -d
     try {
-        skopeo copy $"docker://($image)" $"dir:($tmp_dir)"
+        skopeo --insecure-policy copy $"docker://($image)" $"dir:($tmp_dir)"
         let sbom_file = open $"($tmp_dir)/manifest.json"
         | get layers
         | where mediaType == "text/spdx+json"
