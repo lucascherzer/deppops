@@ -1,47 +1,47 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deppops
-  namespace: deppops
-  labels:
-    app: deppops
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: deppops
-  template:
-    metadata:
-      labels:
+    name: deppops
+    namespace: deppops
+    labels:
         app: deppops
-    spec:
-      containers:
-        - name: deppops
-          image: ghcr.io/lucascherzer/deppops/deppops@sha256:1f0799e6f9705324be6c2fc94ced25c983a162289849cee1702fc01b5530bb8b
-          imagePullPolicy: IfNotPresent
-          env:
-            - name: RUST_LOG
-              value: trace
-          ports:
-            - name: http
-              containerPort: 8080
-              protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /health/live
-              port: http
-            initialDelaySeconds: 5
-            periodSeconds: 10
-          readinessProbe:
-            httpGet:
-              path: /health/ready
-              port: http
-            initialDelaySeconds: 5
-            periodSeconds: 5
-          resources:
-            requests:
-              cpu: 100m
-              memory: 64Mi
-            limits:
-              cpu: 200m
-              memory: 128Mi
+spec:
+    replicas: 2
+    selector:
+        matchLabels:
+            app: deppops
+    template:
+        metadata:
+            labels:
+                app: deppops
+        spec:
+            containers:
+                - name: deppops
+                  image: ghcr.io/lucascherzer/deppops/deppops:sha256-12bb6f21b68df3574aeeca192eab43e9f18eb303641d383caa7c787323fb9ebb
+                  imagePullPolicy: IfNotPresent
+                  env:
+                      - name: RUST_LOG
+                        value: trace
+                  ports:
+                      - name: http
+                        containerPort: 8080
+                        protocol: TCP
+                  livenessProbe:
+                      httpGet:
+                          path: /health/live
+                          port: http
+                      initialDelaySeconds: 5
+                      periodSeconds: 10
+                  readinessProbe:
+                      httpGet:
+                          path: /health/ready
+                          port: http
+                      initialDelaySeconds: 5
+                      periodSeconds: 5
+                  resources:
+                      requests:
+                          cpu: 100m
+                          memory: 64Mi
+                      limits:
+                          cpu: 200m
+                          memory: 128Mi
